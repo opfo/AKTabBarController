@@ -29,6 +29,12 @@
 // View Controllers handled by the tab bar controller.
 @property (nonatomic, strong) NSMutableArray *viewControllers;
 
+// Current active view controller
+@property (nonatomic, strong) UIViewController *selectedViewController;
+
+// Current active view controller index
+@property (nonatomic, assign) NSInteger selectedIndex;
+
 // This is the minimum height to display the title.
 @property (nonatomic, assign) CGFloat minimumHeightToDisplayTitle;
 
@@ -56,6 +62,9 @@
 // Tabs selected colors.
 @property (nonatomic, strong) NSArray *selectedTabColors;
 
+// Tabs icon pre-rendered yes / no
+@property (nonatomic, assign) BOOL tabIconPreRendered;
+
 // Tabs icon glossy show / hide
 @property (nonatomic, assign) BOOL iconGlossyIsHidden;
 
@@ -78,12 +87,22 @@
 @property (nonatomic, strong) NSString *selectedBackgroundImageName;
 
 // Tab text color
-@property (nonatomic, strong)  UIColor *textColor;
+@property (nonatomic, strong) UIColor *textColor;
 
 // Tab selected text color
-@property (nonatomic, strong)  UIColor *selectedTextColor;
+@property (nonatomic, strong) UIColor *selectedTextColor;
+
+// Tab title font
+@property (nonatomic, strong) UIFont *textFont;
 
 // Initialization with a specific height.
 - (id)initWithTabBarHeight:(NSUInteger)height;
+
+// Hide / Show Methods
+- (void)showTabBarAnimated:(BOOL)animated;
+- (void)hideTabBarAnimated:(BOOL)animated;
+
+// Refresh the Tab Bar
+- (void)loadTabs;
 
 @end

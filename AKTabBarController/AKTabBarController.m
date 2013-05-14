@@ -40,9 +40,6 @@ typedef enum {
     AKShowHideFromRight
 } AKShowHideFrom;
 
-// Current active view controller
-@property (nonatomic, strong) UIViewController *selectedViewController;
-
 - (void)loadTabs;
 - (void)showTabBar:(AKShowHideFrom)showHideFrom animated:(BOOL)animated;
 - (void)hideTabBar:(AKShowHideFrom)showHideFrom animated:(BOOL)animated;
@@ -53,10 +50,10 @@ typedef enum {
 {
     // Bottom tab bar view
     AKTabBar *tabBar;
-    
+
     // Content view
     AKTabBarView *tabBarView;
-    
+
     // Tab Bar height
     NSUInteger tabBarHeight;
 }
@@ -72,28 +69,28 @@ typedef enum {
 {
     self = [super init];
     if (!self) return nil;
-    
+
     tabBarHeight = height;
-    
+
     // default settings
     _iconShadowOffset = CGSizeMake(0, -1);
-    
+
     return self;
 }
 
 - (void)loadView
 {
     [super loadView];
-    
+
     // Creating and adding the tab bar view
     tabBarView = [[AKTabBarView alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]];
     self.view = tabBarView;
-    
+
     // Creating and adding the tab bar
     CGRect tabBarRect = CGRectMake(0.0, CGRectGetHeight(self.view.bounds) - tabBarHeight, CGRectGetWidth(self.view.frame), tabBarHeight);
     tabBar = [[AKTabBar alloc] initWithFrame:tabBarRect];
     tabBar.delegate = self;
-    
+
     tabBarView.tabBar = tabBar;
     tabBarView.contentView = _selectedViewController.view;
     [[self navigationItem] setTitle:[_selectedViewController title]];
@@ -109,7 +106,7 @@ typedef enum {
         [[tabBarView tabBar] setTabColors:[self tabCGColors]];
         [[tabBarView tabBar] setEdgeColor:[self tabEdgeColor]];
         [[tabBarView tabBar] setTopEdgeColor:[self topEdgeColor]];
-        
+
         AKTab *tab = [[AKTab alloc] init];
         [tab setTabImageWithName:[vc tabImageName]];
         [tab setBackgroundImageName:[self backgroundImageName]];
@@ -122,51 +119,53 @@ typedef enum {
         [tab setTabSelectedColors:[self selectedTabCGColors]];
         [tab setEdgeColor:[self tabEdgeColor]];
         [tab setTopEdgeColor:[self topEdgeColor]];
+        [tab setTabIconPreRendered:[self tabIconPreRendered]];
         [tab setGlossyIsHidden:[self iconGlossyIsHidden]];
         [tab setStrokeColor:[self tabStrokeColor]];
         [tab setInnerStrokeColor:[self tabInnerStrokeColor]];
         [tab setTextColor:[self textColor]];
         [tab setSelectedTextColor:[self selectedTextColor]];
+        [tab setTabTitleFont:[self textFont]];
         [tab setTabTitle:[vc tabTitle]];
-        
+
         [tab setTabBarHeight:tabBarHeight];
-        
+
         if (_minimumHeightToDisplayTitle)
             [tab setMinimumHeightToDisplayTitle:_minimumHeightToDisplayTitle];
-        
+
         if (_tabTitleIsHidden)
             [tab setTitleIsHidden:YES];
-        
+
         if ([[vc class] isSubclassOfClass:[UINavigationController class]])
             ((UINavigationController *)vc).delegate = self;
-        
+
         [tabs addObject:tab];
     }
-    
+
     [tabBar setTabs:tabs];
-    
+
     // Setting the first view controller as the active one
-    [tabBar setSelectedTab:[tabBar.tabs objectAtIndex:0]];
+    if ([tabs count] > 0) [tabBar setSelectedTab:(tabBar.tabs)[_selectedIndex]];
 }
 
 - (NSArray *) selectedIconCGColors
 {
-    return _selectedIconColors ? @[(id)[[_selectedIconColors objectAtIndex:0] CGColor], (id)[[_selectedIconColors objectAtIndex:1] CGColor]] : nil;
+    return _selectedIconColors ? @[(id)[_selectedIconColors[0] CGColor], (id)[_selectedIconColors[1] CGColor]] : nil;
 }
 
 - (NSArray *) iconCGColors
 {
-    return _iconColors ? @[(id)[[_iconColors objectAtIndex:0] CGColor], (id)[[_iconColors objectAtIndex:1] CGColor]] : nil;
+    return _iconColors ? @[(id)[_iconColors[0] CGColor], (id)[_iconColors[1] CGColor]] : nil;
 }
 
 - (NSArray *) tabCGColors
 {
-    return _tabColors ? @[(id)[[_tabColors objectAtIndex:0] CGColor], (id)[[_tabColors objectAtIndex:1] CGColor]] : nil;
+    return _tabColors ? @[(id)[_tabColors[0] CGColor], (id)[_tabColors[1] CGColor]] : nil;
 }
 
 - (NSArray *) selectedTabCGColors
 {
-    return _selectedTabColors ? @[(id)[[_selectedTabColors objectAtIndex:0] CGColor], (id)[[_selectedTabColors objectAtIndex:1] CGColor]] : nil;
+    return _selectedTabColors ? @[(id)[_selectedTabColors[0] CGColor], (id)[_selectedTabColors[1] CGColor]] : nil;
 }
 
 #pragma - UINavigationControllerDelegate
@@ -175,42 +174,42 @@ typedef enum {
 {
     if (!prevViewControllers)
         prevViewControllers = [navigationController viewControllers];
-    
-    
+
+
     // We detect is the view as been push or popped
     BOOL pushed;
-    
+
     if ([prevViewControllers count] <= [[navigationController viewControllers] count])
         pushed = YES;
     else
         pushed = NO;
-    
+
     // Logic to know when to show or hide the tab bar
     BOOL isPreviousHidden, isNextHidden;
-    
+
     isPreviousHidden = [[prevViewControllers lastObject] hidesBottomBarWhenPushed];
     isNextHidden = [viewController hidesBottomBarWhenPushed];
-    
+
     prevViewControllers = [navigationController viewControllers];
-    
+
     if (!isPreviousHidden && !isNextHidden)
         return;
-    
+
     else if (!isPreviousHidden && isNextHidden)
         [self hideTabBar:(pushed ? AKShowHideFromRight : AKShowHideFromLeft) animated:animated];
-    
+
     else if (isPreviousHidden && !isNextHidden)
         [self showTabBar:(pushed ? AKShowHideFromRight : AKShowHideFromLeft) animated:animated];
-    
+
     else if (isPreviousHidden && isNextHidden)
         return;
 }
 
 - (void)showTabBar:(AKShowHideFrom)showHideFrom animated:(BOOL)animated
 {
-    
+
     CGFloat directionVector;
-    
+
     switch (showHideFrom) {
         case AKShowHideFromLeft:
             directionVector = -1.0;
@@ -221,11 +220,11 @@ typedef enum {
         default:
             break;
     }
-    
+
     tabBar.hidden = NO;
     tabBar.transform = CGAffineTransformMakeTranslation(CGRectGetWidth(self.view.bounds) * directionVector, 0);
     // when the tabbarview is resized we can see the view behind
-    
+
     [UIView animateWithDuration:((animated) ? kPushAnimationDuration : 0) animations:^{
         tabBar.transform = CGAffineTransformIdentity;
     } completion:^(BOOL finished) {
@@ -236,7 +235,7 @@ typedef enum {
 
 - (void)hideTabBar:(AKShowHideFrom)showHideFrom animated:(BOOL)animated
 {
-    
+
     CGFloat directionVector;
     switch (showHideFrom) {
         case AKShowHideFromLeft:
@@ -248,13 +247,13 @@ typedef enum {
         default:
             break;
     }
-    
+
     tabBarView.isTabBarHidding = YES;
-    
+
     CGRect tmpTabBarView = tabBarView.contentView.frame;
     tmpTabBarView.size.height = tabBarView.bounds.size.height;
     tabBarView.contentView.frame = tmpTabBarView;
-    
+
     [UIView animateWithDuration:((animated) ? kPushAnimationDuration : 0) animations:^{
         tabBar.transform = CGAffineTransformMakeTranslation(CGRectGetWidth(self.view.bounds) * directionVector, 0);
     } completion:^(BOOL finished) {
@@ -268,29 +267,64 @@ typedef enum {
 - (void)setViewControllers:(NSMutableArray *)viewControllers
 {
     _viewControllers = viewControllers;
-    
+
     // When setting the view controllers, the first vc is the selected one;
-    [self setSelectedViewController:[viewControllers objectAtIndex:0]];
+    if ([viewControllers count] > 0) [self setSelectedViewController:viewControllers[0]];
+
+    // Load the tabs on the go
+    [self loadTabs];
 }
 
 - (void)setSelectedViewController:(UIViewController *)selectedViewController
 {
-    if (_selectedViewController != selectedViewController)
+    UIViewController *previousSelectedViewController = _selectedViewController;
+    NSInteger selectedIndex = [self.viewControllers indexOfObject:selectedViewController];
+
+    if (_selectedViewController != selectedViewController && selectedIndex != NSNotFound)
     {
+
         _selectedViewController = selectedViewController;
-        
+        _selectedIndex = selectedIndex;
+
+        if ((self.childViewControllers == nil || !self.childViewControllers.count) && visible)
+        {
+            [previousSelectedViewController viewWillDisappear:NO];
+            [selectedViewController viewWillAppear:NO];
+        }
+
         [tabBarView setContentView:selectedViewController.view];
-        [tabBar setSelectedTab:[tabBar.tabs objectAtIndex:[self.viewControllers indexOfObject:selectedViewController]]];
+
+        if ((self.childViewControllers == nil || !self.childViewControllers.count) && visible)
+        {
+            [previousSelectedViewController viewDidDisappear:NO];
+            [selectedViewController viewDidAppear:NO];
+        }
+
+        [tabBar setSelectedTab:(tabBar.tabs)[selectedIndex]];
     }
 }
 
+- (void)setSelectedIndex:(NSInteger)selectedIndex
+{
+    [self setSelectedViewController:(self.viewControllers)[selectedIndex]];
+}
+
+#pragma mark - Hide / Show Methods
+
+- (void)showTabBarAnimated:(BOOL)animated {
+    [self showTabBar:AKShowHideFromRight animated:animated];
+}
+
+- (void)hideTabBarAnimated:(BOOL)animated {
+    [self hideTabBar:AKShowHideFromRight animated:animated];
+}
 
 #pragma mark - Required Protocol Method
 
 - (void)tabBar:(AKTabBar *)AKTabBarDelegate didSelectTabAtIndex:(NSInteger)index
 {
-    UIViewController *vc = [self.viewControllers objectAtIndex:index];
-    
+    UIViewController *vc = (self.viewControllers)[index];
+
     if (self.selectedViewController == vc)
     {
         if ([vc isKindOfClass:[UINavigationController class]])
@@ -320,7 +354,7 @@ typedef enum {
     // Redraw with will rotating and keeping the aspect ratio
     for (AKTab *tab in [tabBar tabs])
         [tab setNeedsDisplay];
-    
+
     [self.selectedViewController willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
 }
 
@@ -330,17 +364,40 @@ typedef enum {
 }
 
 #pragma mark - ViewController Life cycle
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+
+    if ((self.childViewControllers == nil || !self.childViewControllers.count))
+        [self.selectedViewController viewWillAppear:animated];
+}
+
 - (void)viewDidAppear:(BOOL)animated
 {
-	[super viewDidAppear:animated];
-    
+    [super viewDidAppear:animated];
+
+    if ((self.childViewControllers == nil || !self.childViewControllers.count))
+        [self.selectedViewController viewDidAppear:animated];
+
     visible = YES;
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+
+    if ((self.childViewControllers == nil || !self.childViewControllers.count))
+        [self.selectedViewController viewWillDisappear:animated];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
-	[super viewDidDisappear:animated];
-    
+    [super viewDidDisappear:animated];
+
+    if (![self respondsToSelector:@selector(addChildViewController:)])
+        [self.selectedViewController viewDidDisappear:animated];
+
     visible = NO;
 }
 

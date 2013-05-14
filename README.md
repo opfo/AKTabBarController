@@ -12,6 +12,8 @@ AKTabBarController is an adaptive and customizable tab bar for iOS.
 - Only one image is needed for both selected and unselected states (style is added via CoreGraphics).
 - Icons are resized when needed and particularly in landscape mode.
 - Animated state of the tabs with a nice cross fade animation.
+- Support pre-rendered images (no glossy effect will be applied).
+- Set a custom font for tab titles.
 
 ## Preview
 ###iPhone portrait
@@ -104,8 +106,14 @@ When pushing a viewcontroller in the viewControllers stack of an UINavigationCon
 [_tabBarController setTextColor:[UIColor colorWithRed:157.0/255.0 green:157.0/255.0 blue:157.0/255.0 alpha:1.0]];
 [_tabBarController setSelectedTextColor:[UIColor colorWithRed:228.0/255.0 green:228.0/255.0 blue:228.0/255.0 alpha:1.0]];
 
+// Text font
+[_tabBarController setTextFont:[UIFont fontWithName:@"Chalkduster" size:14]];
+
 // Hide / Show glossy effect on tab icons
 [_tabBarController setIconGlossyIsHidden:YES];
+
+// Enable / Disable pre-rendered image mode
+[_tabBarController setTabIconPreRendered:YES];
 ```
 ###See below the result of the customization:  
 ![iPhone portrait](https://github.com/alikaragoz/AKTabBarController/raw/master/Screenshots/iphone-portrait-customized.png)
